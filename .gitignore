@@ -1,5 +1,6 @@
 .nvim.lua
 .project_env
 .ipynb_checkpoints/
+.todo
 data/
 papers/
