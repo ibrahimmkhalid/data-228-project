@@ -1,0 +1,126 @@
+# ---
+# jupyter:
+#   jupytext:
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.15.2
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
+
+# %%
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC, SVR
+from sklearn.metrics import classification_report, mean_squared_error, accuracy_score
+random_state = 228
+
+
+# %%
+df = pd.read_csv("./data/france_weather_energy.csv")
+df.head()
+
+# %%
+df.shape
+
+# %%
+df = df.sample(100, random_state=random_state)
+df.shape
+
+# %%
+y_cols = ["production_wind", "production_solar"]
+X_ = df.drop(columns=y_cols)
+y = df[y_cols]
+display(X_.head())
+display(y.head())
+
+# %%
+corr = df.corr()
+plt.figure(figsize=(14, 10))
+sns.heatmap(corr, annot=True)
+plt.show()
+
+# %%
+significant_cols = corr[y_cols].abs().gt(0.1)
+significant_cols.drop(index=y_cols, inplace=True)
+display(significant_cols)
+
+# %%
+wind_significant_cols = list(k for k, v in significant_cols["production_wind"].items() if v==True)
+solar_significant_cols = list(k for k, v in significant_cols["production_solar"].items() if v==True)
+
+print("Wind significant columns:", wind_significant_cols)
+print("Solar significant columns:", solar_significant_cols)
+
+# %%
+standard_scalar = StandardScaler()
+standard_scalar.fit(X_)
+X = standard_scalar.transform(X_)
+X = pd.DataFrame(X, columns=X_.columns)
+X.head()
+
+# %%
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
+
+# %%
+y_wind_train = y_train["production_wind"]
+y_solar_train = y_train["production_solar"]
+y_wind_test = y_test["production_wind"]
+y_solar_test = y_test["production_solar"]
+
+# %%
+X_wind_train = X_train[wind_significant_cols]
+X_solar_train = X_train[solar_significant_cols]
+X_wind_test = X_test[wind_significant_cols]
+X_solar_test = X_test[solar_significant_cols]
+
+# %%
+grid_params = {
+    "C": [0.1, 1, 10, 100, 1000],
+    "gamma": [1, 0.1, 0.01, 0.001, 0.0001],
+    "kernel": ["rbf", "linear", "poly", "sigmoid"]
+}
+
+# %%
+grid_search_wind = GridSearchCV(SVR(), grid_params, refit=True, verbose=3, n_jobs=-1, cv=3)
+grid_search_solar = GridSearchCV(SVR(), grid_params, refit=True, verbose=3, n_jobs=-1, cv=3)
+
+# %%
+grid_search_wind.fit(X_wind_train, y_wind_train)
+
+# %%
+grid_search_solar.fit(X_solar_train, y_solar_train)
+
+# %%
+y_wind_pred = grid_search_wind.predict(X_wind_test)
+y_solar_pred = grid_search_solar.predict(X_solar_test)
+
+# %%
+print("Wind regression report:")
+print(mean_squared_error(y_wind_test, y_wind_pred))
+
+# %%
+print("Solar regression report:")
+print(mean_squared_error(y_solar_test, y_solar_pred))
+
+# %%
+plt.figure(figsize=(14, 10))
+plt.plot(y_wind_test.to_list(), label="True wind production")
+plt.plot(y_wind_pred, label="Predicted wind production")
+plt.legend()
+plt.show()
+
+# %%
+plt.figure(figsize=(14, 10))
+plt.plot(y_solar_test.to_list(), label="True solar production")
+plt.plot(y_solar_pred, label="Predicted solar production")
+plt.legend()
+plt.show()
