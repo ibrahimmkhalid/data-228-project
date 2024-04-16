@@ -32,7 +32,7 @@ df.head()
 df.shape
 
 # %%
-df = df.sample(100, random_state=random_state)
+df = df.sample(1000, random_state=random_state)
 df.shape
 
 # %%
@@ -90,8 +90,8 @@ grid_params = {
 }
 
 # %%
-grid_search_wind = GridSearchCV(SVR(), grid_params, refit=True, verbose=3, n_jobs=-1, cv=3)
-grid_search_solar = GridSearchCV(SVR(), grid_params, refit=True, verbose=3, n_jobs=-1, cv=3)
+grid_search_wind = GridSearchCV(SVR(), grid_params, refit=True, n_jobs=-1, cv=3)
+grid_search_solar = GridSearchCV(SVR(), grid_params, refit=True, n_jobs=-1, cv=3)
 
 # %%
 grid_search_wind.fit(X_wind_train, y_wind_train)
@@ -105,22 +105,23 @@ y_solar_pred = grid_search_solar.predict(X_solar_test)
 
 # %%
 print("Wind regression report:")
-print(mean_squared_error(y_wind_test, y_wind_pred))
+print(mean_squared_error(y_wind_test, y_wind_pred, squared=False))
 
 # %%
 print("Solar regression report:")
-print(mean_squared_error(y_solar_test, y_solar_pred))
+print(mean_squared_error(y_solar_test, y_solar_pred, squared=False))
 
 # %%
+range_n = 24*3
 plt.figure(figsize=(14, 10))
-plt.plot(y_wind_test.to_list(), label="True wind production")
-plt.plot(y_wind_pred, label="Predicted wind production")
+plt.plot(y_wind_test.to_list()[:range_n], label="True wind production")
+plt.plot(y_wind_pred[:range_n], label="Predicted wind production")
 plt.legend()
 plt.show()
 
 # %%
 plt.figure(figsize=(14, 10))
-plt.plot(y_solar_test.to_list(), label="True solar production")
-plt.plot(y_solar_pred, label="Predicted solar production")
+plt.plot(y_solar_test.to_list()[:range_n], label="True solar production")
+plt.plot(y_solar_pred[:range_n], label="Predicted solar production")
 plt.legend()
 plt.show()
