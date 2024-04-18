@@ -20,6 +20,7 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC, SVR
+from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import classification_report, mean_squared_error, accuracy_score
 random_state = 228
 
@@ -32,7 +33,7 @@ df.head()
 df.shape
 
 # %%
-df = df.sample(1000, random_state=random_state)
+df = df.sample(4000, random_state=random_state)
 df.shape
 
 # %%
@@ -100,6 +101,10 @@ grid_search_wind.fit(X_wind_train, y_wind_train)
 grid_search_solar.fit(X_solar_train, y_solar_train)
 
 # %%
+print("Best wind params:", grid_search_wind.best_params_)
+print("Best solar params:", grid_search_solar.best_params_)
+
+# %%
 y_wind_pred = grid_search_wind.predict(X_wind_test)
 y_solar_pred = grid_search_solar.predict(X_solar_test)
 
@@ -114,14 +119,55 @@ print(mean_squared_error(y_solar_test, y_solar_pred, squared=False))
 # %%
 range_n = 24*3
 plt.figure(figsize=(14, 10))
-plt.plot(y_wind_test.to_list()[:range_n], label="True wind production")
-plt.plot(y_wind_pred[:range_n], label="Predicted wind production")
+plt.plot(y_wind_test.to_list()[:range_n], label="True wind production", color="blue", linestyle="solid", alpha=0.5)
+plt.plot(y_wind_pred[:range_n], label="Predicted wind production", color="blue", linestyle="dashed")
 plt.legend()
 plt.show()
 
 # %%
 plt.figure(figsize=(14, 10))
-plt.plot(y_solar_test.to_list()[:range_n], label="True solar production")
-plt.plot(y_solar_pred[:range_n], label="Predicted solar production")
+plt.plot(y_solar_test.to_list()[:range_n], label="True solar production", color="orange", linestyle="solid", alpha=0.5)
+plt.plot(y_solar_pred[:range_n], label="Predicted solar production", color="orange", linestyle="dashed")
 plt.legend()
+plt.show()
+
+# %%
+print("Total solar production:", np.sum(y_solar_pred))
+print("Total wind production :", np.sum(y_wind_pred))
+
+
+# %% 
+grid_params = {
+    "estimator__gamma": [1, 0.1, 0.01, 0.001, 0.0001],
+}
+
+# %%
+# selected params from above tests that were common in both wind and solar prediction
+grid = GridSearchCV(MultiOutputRegressor(SVR(kernel="rbf", C=1000)), grid_params, refit=True, n_jobs=-1, cv=3)
+
+# %%
+grid.fit(X_train, y_train)
+
+# %%
+y_pred = grid.predict(X_test)
+
+# %%
+print("Regression report:")
+print(mean_squared_error(y_test, y_pred, squared=False))
+
+
+# %%
+range_n = 24*2
+y_pred = grid.predict(X[:range_n])
+y_true = y[:range_n]
+
+# %%
+plt.figure(figsize=(14, 10))
+plt.plot(y_true["production_wind"].to_list(), label="True wind production", color="blue", linestyle="solid", alpha=0.5)
+plt.plot(y_pred[:, 0], label="Predicted wind production", color="blue", linestyle="dashed")
+plt.plot(y_true["production_solar"].to_list(), label="True solar production", color="orange", linestyle="solid", alpha=0.5)
+plt.plot(y_pred[:, 1], label="Predicted solar production", color="orange", linestyle="dashed")
+plt.legend()
+plt.ylabel("Production (MW)")
+plt.xlabel("Instance in time")
 plt.show()
