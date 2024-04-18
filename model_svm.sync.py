@@ -178,3 +178,12 @@ plt.show()
 # %%
 print("Total solar production:", np.sum(y_pred[:, 1]))
 print("Total wind production :", np.sum(y_pred[:, 0]))
+
+# %%
+print("Comparing rmse values with original data standard deviation:")
+print("Original wind production std:", df["production_wind"].std())
+print("Original solar production std:", df["production_solar"].std())
+print()
+print("Predicted wind production rmse:", rmse_wind)
+print("Predicted solar production rmse:", rmse_solar)
+print("Multi-output regression rmse:", rmse_multi)
