@@ -110,11 +110,13 @@ y_solar_pred = grid_search_solar.predict(X_solar_test)
 
 # %%
 print("Wind regression report:")
-print(mean_squared_error(y_wind_test, y_wind_pred, squared=False))
+rmse_wind = mean_squared_error(y_wind_test, y_wind_pred, squared=False)
+print(rmse_wind)
 
 # %%
 print("Solar regression report:")
-print(mean_squared_error(y_solar_test, y_solar_pred, squared=False))
+rmse_solar = mean_squared_error(y_solar_test, y_solar_pred, squared=False)
+print(rmse_solar)
 
 # %%
 range_n = 24*3
@@ -149,11 +151,12 @@ grid = GridSearchCV(MultiOutputRegressor(SVR(kernel="rbf", C=1000)), grid_params
 grid.fit(X_train, y_train)
 
 # %%
-y_pred = grid.predict(X_test)
+y_multi_pred = grid.predict(X_test)
 
 # %%
 print("Regression report:")
-print(mean_squared_error(y_test, y_pred, squared=False))
+rmse_multi = mean_squared_error(y_test, y_multi_pred, squared=False)
+print(rmse_multi)
 
 
 # %%
@@ -171,3 +174,7 @@ plt.legend()
 plt.ylabel("Production (MW)")
 plt.xlabel("Instance in time")
 plt.show()
+
+# %%
+print("Total solar production:", np.sum(y_pred[:, 1]))
+print("Total wind production :", np.sum(y_pred[:, 0]))
