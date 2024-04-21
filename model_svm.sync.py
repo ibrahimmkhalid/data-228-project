@@ -25,16 +25,11 @@ from sklearn.metrics import mean_squared_error
 
 random_state = 228
 
-
 # %%
 df = pd.read_csv("./data/france_weather_energy.csv")
 df.head()
 
 # %%
-df.shape
-
-# %%
-df = df.sample(8000, random_state=random_state)
 df.shape
 
 # %%
@@ -166,16 +161,16 @@ plt.show()
 print("Total solar production:", np.sum(y_solar_pred))
 print("Total wind production :", np.sum(y_wind_pred))
 
-
 # %%
 grid_params = {
     "estimator__gamma": [1, 0.1, 0.01, 0.001, 0.0001],
+    "estimator__C": [0.1, 1, 10, 100, 1000]
 }
 
 # %%
 # selected params from above tests that were common in both wind and solar prediction
 grid = GridSearchCV(
-    MultiOutputRegressor(SVR(kernel="rbf", C=1000)),
+    MultiOutputRegressor(SVR(kernel="rbf")),
     grid_params,
     refit=True,
     n_jobs=-1,
@@ -193,37 +188,60 @@ print("Regression report:")
 rmse_multi = mean_squared_error(y_test, y_multi_pred, squared=False)
 print(rmse_multi)
 
+# %%
+df=pd.read_csv("./data/france_weather_energy_with_date.csv")
+X_ = df.drop(columns=y_cols)
+y = df[y_cols]
+dates = X_["dt_iso"]
+X_ = X_.drop(columns=["dt_iso"])
+X = standard_scalar.transform(X_)
+X = pd.DataFrame(X, columns=X_.columns)
 
 # %%
-range_n = 24 * 2
-y_pred = grid.predict(X[:range_n])
-y_true = y[:range_n]
+start_n = 100
+range_n = 24 * 2 + start_n
+y_pred = grid.predict(X[start_n:range_n])
+y_true = y[start_n:range_n]
 
 # %%
-plt.figure(figsize=(14, 10))
-plt.plot(
+dates = pd.to_datetime(dates)
+selected_dates = dates[start_n:range_n:6]
+def format_date_time(dt):
+    return dt.strftime('%Y-%m-%d\n%H:%M:%S')
+formatted_dates = [format_date_time(dt) for dt in selected_dates]
+
+# %%
+fig, ax = plt.subplots(2, figsize=(14, 10), sharex=True, sharey=True)
+ax[0].plot(
+    dates[start_n:range_n],
     y_true["production_wind"].to_list(),
     label="True wind production",
     color="blue",
     linestyle="solid",
     alpha=0.5,
 )
-plt.plot(
+ax[0].plot(
+    dates[start_n:range_n],
     y_pred[:, 0], label="Predicted wind production", color="blue", linestyle="dashed"
 )
-plt.plot(
+ax[1].plot(
+    dates[start_n:range_n],
     y_true["production_solar"].to_list(),
     label="True solar production",
     color="orange",
     linestyle="solid",
     alpha=0.5,
 )
-plt.plot(
+ax[1].plot(
+    dates[start_n:range_n],
     y_pred[:, 1], label="Predicted solar production", color="orange", linestyle="dashed"
 )
-plt.legend()
-plt.ylabel("Production (MW)")
+ax[0].legend()
+ax[1].legend()
+ax[0].set_ylabel("Wind production (MW)")
+ax[1].set_ylabel("Solar production (MW)")
 plt.xlabel("Instance in time")
+plt.xticks(selected_dates, formatted_dates)
 plt.show()
 
 # %%
