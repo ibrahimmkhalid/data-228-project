@@ -164,7 +164,7 @@ print("Total wind production :", np.sum(y_wind_pred))
 # %%
 grid_params = {
     "estimator__gamma": [1, 0.1, 0.01, 0.001, 0.0001],
-    "estimator__C": [0.1, 1, 10, 100, 1000]
+    "estimator__C": [0.1, 1, 10, 100, 1000],
 }
 
 # %%
@@ -189,7 +189,7 @@ rmse_multi = mean_squared_error(y_test, y_multi_pred, squared=False)
 print(rmse_multi)
 
 # %%
-df=pd.read_csv("./data/france_weather_energy_with_date.csv")
+df = pd.read_csv("./data/france_weather_energy_with_date.csv")
 X_ = df.drop(columns=y_cols)
 y = df[y_cols]
 dates = X_["dt_iso"]
@@ -206,8 +206,12 @@ y_true = y[start_n:range_n]
 # %%
 dates = pd.to_datetime(dates)
 selected_dates = dates[start_n:range_n:6]
+
+# %%
 def format_date_time(dt):
-    return dt.strftime('%Y-%m-%d\n%H:%M:%S')
+    return dt.strftime("%Y-%m-%d\n%H:%M:%S")
+
+# %%
 formatted_dates = [format_date_time(dt) for dt in selected_dates]
 
 # %%
@@ -222,7 +226,10 @@ ax[0].plot(
 )
 ax[0].plot(
     dates[start_n:range_n],
-    y_pred[:, 0], label="Predicted wind production", color="blue", linestyle="dashed"
+    y_pred[:, 0],
+    label="Predicted wind production",
+    color="blue",
+    linestyle="dashed",
 )
 ax[1].plot(
     dates[start_n:range_n],
@@ -234,7 +241,10 @@ ax[1].plot(
 )
 ax[1].plot(
     dates[start_n:range_n],
-    y_pred[:, 1], label="Predicted solar production", color="orange", linestyle="dashed"
+    y_pred[:, 1],
+    label="Predicted solar production",
+    color="orange",
+    linestyle="dashed",
 )
 ax[0].legend()
 ax[1].legend()
