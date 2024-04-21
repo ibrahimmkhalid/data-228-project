@@ -11,7 +11,12 @@
 #     language: python
 #     name: python3
 # ---
-
+try:
+    from google.colab import drive
+    drive.mount("/content/drive")
+    is_colab = True
+except:
+    is_colab = False
 # %%
 import pandas as pd
 import numpy as np
@@ -26,7 +31,15 @@ from sklearn.metrics import mean_squared_error
 random_state = 228
 
 # %%
-df = pd.read_csv("./data/france_weather_energy.csv")
+if is_colab:
+    prepend_path = "/content/drive/MyDrive/Syncable/sjsu/data-228/DATA 228 Project Files"
+else:
+    prepend_path = "."
+data_path = f"{prepend_path}/data/france_weather_energy.csv"
+data_path_dates = f"{prepend_path}/data/france_weather_energy_with_date.csv"
+
+# %%
+df = pd.read_csv(data_path)
 df.head()
 
 # %%
@@ -189,7 +202,7 @@ rmse_multi = mean_squared_error(y_test, y_multi_pred, squared=False)
 print(rmse_multi)
 
 # %%
-df = pd.read_csv("./data/france_weather_energy_with_date.csv")
+df = pd.read_csv(data_path_dates)
 X_ = df.drop(columns=y_cols)
 y = df[y_cols]
 dates = X_["dt_iso"]
