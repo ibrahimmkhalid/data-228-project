@@ -17,6 +17,7 @@ try:
     is_colab = True
 except:
     is_colab = False
+
 # %%
 import pandas as pd
 import numpy as np
@@ -134,8 +135,9 @@ rmse_solar = mean_squared_error(y_solar_test, y_solar_pred, squared=False)
 print(rmse_solar)
 
 # %%
-range_n = 24 * 3
-plt.figure(figsize=(14, 10))
+range_n = 24 * 2
+figsize = (8, 6)
+plt.figure(figsize=figsize)
 plt.plot(
     y_wind_test.to_list()[:range_n],
     label="True wind production",
@@ -153,7 +155,25 @@ plt.legend()
 plt.show()
 
 # %%
-plt.figure(figsize=(14, 10))
+plt.figure(figsize=figsize)
+plt.plot(
+    y_wind_test.to_list(),
+    label="True wind production",
+    color="blue",
+    linestyle="solid",
+    alpha=0.5,
+)
+plt.plot(
+    y_wind_pred,
+    label="Predicted wind production",
+    color="blue",
+    linestyle="dashed",
+)
+plt.legend()
+plt.show()
+
+# %%
+plt.figure(figsize=figsize)
 plt.plot(
     y_solar_test.to_list()[:range_n],
     label="True solar production",
@@ -163,6 +183,24 @@ plt.plot(
 )
 plt.plot(
     y_solar_pred[:range_n],
+    label="Predicted solar production",
+    color="orange",
+    linestyle="dashed",
+)
+plt.legend()
+plt.show()
+
+# %%
+plt.figure(figsize=figsize)
+plt.plot(
+    y_solar_test.to_list(),
+    label="True solar production",
+    color="orange",
+    linestyle="solid",
+    alpha=0.5,
+)
+plt.plot(
+    y_solar_pred,
     label="Predicted solar production",
     color="orange",
     linestyle="dashed",
@@ -228,7 +266,7 @@ def format_date_time(dt):
 formatted_dates = [format_date_time(dt) for dt in selected_dates]
 
 # %%
-fig, ax = plt.subplots(2, figsize=(14, 10), sharex=True, sharey=True)
+fig, ax = plt.subplots(2, figsize=figsize, sharex=True, sharey=True)
 ax[0].plot(
     dates[start_n:range_n],
     y_true["production_wind"].to_list(),
@@ -279,3 +317,50 @@ print()
 print("Predicted wind production rmse:", rmse_wind)
 print("Predicted solar production rmse:", rmse_solar)
 print("Multi-output regression rmse:", rmse_multi)
+
+# %%
+y_pred = grid.predict(X)
+y_true = y
+dates = pd.to_datetime(dates)
+selected_dates = dates[::5000]
+formatted_dates = [format_date_time(dt) for dt in selected_dates]
+
+# %%
+fig, ax = plt.subplots(2, figsize=figsize, sharex=True, sharey=True)
+ax[0].plot(
+    dates,
+    y_true["production_wind"].to_list(),
+    label="True wind production",
+    color="blue",
+    linestyle="solid",
+    alpha=0.5,
+)
+ax[0].plot(
+    dates,
+    y_pred[:, 0],
+    label="Predicted wind production",
+    color="blue",
+    linestyle="dashed",
+)
+ax[1].plot(
+    dates,
+    y_true["production_solar"].to_list(),
+    label="True solar production",
+    color="orange",
+    linestyle="solid",
+    alpha=0.5,
+)
+ax[1].plot(
+    dates,
+    y_pred[:, 1],
+    label="Predicted solar production",
+    color="orange",
+    linestyle="dashed",
+)
+ax[0].legend()
+ax[1].legend()
+ax[0].set_ylabel("Wind production (MW)")
+ax[1].set_ylabel("Solar production (MW)")
+plt.xlabel("Instance in time")
+plt.xticks(selected_dates, formatted_dates)
+plt.show()
