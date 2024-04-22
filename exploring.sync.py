@@ -203,12 +203,12 @@ print(df["dt_iso"].max())
 
 # %%
 number_of_days = 7
-start_date = df["dt_iso"].iloc[random.randint(0, len(df))].strftime("%Y-%m-%d")
+start_date = "2022-01-13"
 end_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(days=number_of_days)
 end_date = end_date.strftime("%Y-%m-%d")
 df_plot = df[df["dt_iso"] >= start_date]
 df_plot = df_plot[df_plot["dt_iso"] <= end_date]
-plt.figure(figsize=(14, 7))
+plt.figure(figsize=(10, 6))
 plt.plot(df_plot["dt_iso"], df_plot["production_wind"], label="Wind")
 plt.plot(df_plot["dt_iso"], df_plot["production_solar"], label="Solar")
 plt.xlabel("Date")
@@ -218,7 +218,7 @@ plt.savefig("energy_production_2.png")
 plt.show()
 
 # %%
-fig, ax = plt.subplots(figsize=(14, 10))
+fig, ax = plt.subplots(figsize=(10, 6))
 line1, = ax.plot([], [], label="Wind")
 line2, = ax.plot([], [], label="Solar")
 ax.legend()
@@ -234,16 +234,15 @@ def animate(i):
     ax.set_xlim(start_date, end_date)
     return line1, line2
 
-ani = animation.FuncAnimation(fig, 
-                              animate, 
+ani = animation.FuncAnimation(fig,
+                              animate,
                               frames=int((df["dt_iso"].max() - df["dt_iso"].min()).days - number_of_days + 1),
                               interval=75,
                               blit=True)
 ani.save("energy_production.mp4")
 
-
 # %%
-plt.figure(figsize=(20, 10))
+plt.figure(figsize=(12, 8))
 sns.heatmap(df.corr(), annot=True)
 plt.show()
 
@@ -260,7 +259,7 @@ df.to_csv("./data/france_weather_energy_with_date.csv", index=False)
 df = df.drop(columns=["dt_iso"]).reset_index(drop=True)
 
 # %%
-plt.figure(figsize=(20, 10))
+plt.figure(figsize=(8, 6))
 sns.heatmap(df.corr(), annot=True)
 plt.show()
 
