@@ -240,6 +240,9 @@ rmse_multi = mean_squared_error(y_test, y_multi_pred, squared=False)
 print(rmse_multi)
 
 # %%
+print("Best combinded params:", grid.best_params_)
+
+# %%
 df = pd.read_csv(data_path_dates)
 X_ = df.drop(columns=y_cols)
 y = df[y_cols]
@@ -256,7 +259,7 @@ y_true = y[start_n:range_n]
 
 # %%
 dates = pd.to_datetime(dates)
-selected_dates = dates[start_n:range_n:6]
+selected_dates = dates[start_n:range_n:8]
 
 # %%
 def format_date_time(dt):
