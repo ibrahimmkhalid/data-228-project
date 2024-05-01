@@ -57,7 +57,6 @@ display(y.head())
 
 # %%
 corr = df.corr()
-plt.figure(figsize=(14, 10))
 sns.heatmap(corr, annot=True)
 plt.show()
 
@@ -85,21 +84,55 @@ X = pd.DataFrame(X, columns=X_.columns)
 X.head()
 
 # %%
-X_train, X_test, y_train, y_test = train_test_split(
+X_train, X_tmp, y_train, y_tmp = train_test_split(
     X, y, test_size=0.2, random_state=random_state
+)
+X_test, X_val, y_test, y_val = train_test_split(
+    X_tmp, y_tmp, test_size=0.5, random_state=random_state
 )
 
 # %%
 y_wind_train = y_train["production_wind"]
 y_solar_train = y_train["production_solar"]
+y_wind_val = y_val["production_wind"]
+y_solar_val = y_val["production_solar"]
 y_wind_test = y_test["production_wind"]
 y_solar_test = y_test["production_solar"]
 
 # %%
 X_wind_train = X_train[wind_significant_cols]
 X_solar_train = X_train[solar_significant_cols]
+X_wind_val = X_val[wind_significant_cols]
+X_solar_val = X_val[solar_significant_cols]
 X_wind_test = X_test[wind_significant_cols]
 X_solar_test = X_test[solar_significant_cols]
+
+# %%
+baseline_wind = SVR()
+baseline_solar = SVR()
+
+# %%
+baseline_wind.fit(X_wind_train, y_wind_train)
+
+# %%
+baseline_solar.fit(X_solar_train, y_solar_train)
+
+# %%
+y_wind_pred = baseline_wind.predict(X_wind_test)
+y_solar_pred = baseline_solar.predict(X_solar_test)
+print("Wind regresstion report:")
+rmse_wind = mean_squared_error(y_wind_test, y_wind_pred, squared=False)
+r2_wind = r2_score(y_wind_test, y_wind_pred)
+print("RMSE: ", rmse_wind)
+print("R2: ", r2_wind)
+print()
+print("Solar regresstion report:")
+rmse_solar = mean_squared_error(y_solar_test, y_solar_pred, squared=False)
+r2_solar = r2_score(y_solar_test, y_solar_pred)
+print("RMSE: ", rmse_solar)
+print("R2: ", r2_solar)
+
+
 
 # %%
 grid_params = {
@@ -113,18 +146,28 @@ grid_search_wind = GridSearchCV(SVR(), grid_params, refit=True, n_jobs=-1, cv=3)
 grid_search_solar = GridSearchCV(SVR(), grid_params, refit=True, n_jobs=-1, cv=3)
 
 # %%
-grid_search_wind.fit(X_wind_train, y_wind_train)
+grid_search_wind.fit(X_wind_val, y_wind_val)
 
 # %%
-grid_search_solar.fit(X_solar_train, y_solar_train)
+grid_search_solar.fit(X_solar_val, y_solar_val)
 
 # %%
 print("Best wind params:", grid_search_wind.best_params_)
 print("Best solar params:", grid_search_solar.best_params_)
 
 # %%
-y_wind_pred = grid_search_wind.predict(X_wind_test)
-y_solar_pred = grid_search_solar.predict(X_solar_test)
+tuned_wind = SVR(**grid_search_wind.best_params_)
+tuned_solar = SVR(**grid_search_solar.best_params_)
+
+# %%
+tuned_wind.fit(X_wind_train, y_wind_train)
+
+# %%
+tuned_solar.fit(X_solar_train, y_solar_train)
+
+# %%
+y_wind_pred = tuned_wind.predict(X_wind_test)
+y_solar_pred = tuned_solar.predict(X_solar_test)
 
 # %%
 print("Wind regression report:")
@@ -139,9 +182,6 @@ rmse_solar = mean_squared_error(y_solar_test, y_solar_pred, squared=False)
 r2_solar = r2_score(y_solar_test, y_solar_pred)
 print("RMSE: ", rmse_solar)
 print("R2: ", r2_solar)
-
-# %%
-figsize = (8, 6)
 
 # %%
 range_n = 24 * 2
@@ -222,26 +262,12 @@ print("Total solar production:", np.sum(y_solar_pred))
 print("Total wind production :", np.sum(y_wind_pred))
 
 # %%
-grid_params = {
-    "estimator__gamma": [1, 0.1, 0.01, 0.001, 0.0001],
-    "estimator__C": [0.1, 1, 10, 100, 1000],
-}
+baseline_combined = MultiOutputRegressor(SVR())
+baseline_combined.fit(X_train, y_train)
 
 # %%
-# selected params from above tests that were common in both wind and solar prediction
-grid = GridSearchCV(
-    MultiOutputRegressor(SVR(kernel="rbf")),
-    grid_params,
-    refit=True,
-    n_jobs=-1,
-    cv=3,
-)
+y_multi_pred = baseline_combined.predict(X_test)
 
-# %%
-grid.fit(X_train, y_train)
-
-# %%
-y_multi_pred = grid.predict(X_test)
 
 # %%
 print("Regression report:")
@@ -251,7 +277,48 @@ print("RMSE: ", rmse_multi)
 print("R2: ", r2_multi)
 
 # %%
-print("Best combinded params:", grid.best_params_)
+grid_params = {
+    "estimator__gamma": [1, 0.1, 0.01, 0.001, 0.0001],
+    "estimator__C": [0.1, 1, 10, 100, 1000],
+    "estimator__kernel": ["rbf", "linear", "poly", "sigmoid"],
+}
+
+# %%
+# selected params from above tests that were common in both wind and solar prediction
+grid = GridSearchCV(
+    MultiOutputRegressor(SVR()),
+    grid_params,
+    refit=True,
+    n_jobs=-1,
+    cv=3,
+)
+
+# %%
+grid.fit(X_val, y_val)
+
+# %%
+best_params = {
+    "C": grid.best_params_["estimator__C"],
+    "gamma": grid.best_params_["estimator__gamma"],
+    "kernel": grid.best_params_["estimator__kernel"],
+    }
+
+# %%
+print("Best combinded params:", best_params)
+
+# %%
+multi_output = MultiOutputRegressor(SVR(**best_params))
+multi_output.fit(X_train, y_train)
+
+# %%
+y_multi_pred = multi_output.predict(X_test)
+
+# %%
+print("Regression report:")
+rmse_multi = mean_squared_error(y_test, y_multi_pred, squared=False)
+r2_multi = r2_score(y_test, y_multi_pred)
+print("RMSE: ", rmse_multi)
+print("R2: ", r2_multi)
 
 # %%
 df = pd.read_csv(data_path_dates)
