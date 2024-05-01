@@ -11,6 +11,8 @@
 #     language: python
 #     name: python3
 # ---
+
+# %%
 try:
     from google.colab import drive
     drive.mount("/content/drive")
@@ -24,10 +26,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
+from sklearn.preprocessing import StandardScaler
 from sklearn.multioutput import MultiOutputRegressor
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 
 random_state = 228
 
@@ -127,12 +129,19 @@ y_solar_pred = grid_search_solar.predict(X_solar_test)
 # %%
 print("Wind regression report:")
 rmse_wind = mean_squared_error(y_wind_test, y_wind_pred, squared=False)
-print(rmse_wind)
+r2_wind = r2_score(y_wind_test, y_wind_pred)
+print("RMSE: ", rmse_wind)
+print("R2: ", r2_wind)
 
 # %%
 print("Solar regression report:")
 rmse_solar = mean_squared_error(y_solar_test, y_solar_pred, squared=False)
-print(rmse_solar)
+r2_solar = r2_score(y_solar_test, y_solar_pred)
+print("RMSE: ", rmse_solar)
+print("R2: ", r2_solar)
+
+# %%
+figsize = (8, 6)
 
 # %%
 range_n = 24 * 2
@@ -148,7 +157,7 @@ plt.plot(
 plt.plot(
     y_wind_pred[:range_n],
     label="Predicted wind production",
-    color="blue",
+    color="orange",
     linestyle="dashed",
 )
 plt.legend()
@@ -166,8 +175,8 @@ plt.plot(
 plt.plot(
     y_wind_pred,
     label="Predicted wind production",
-    color="blue",
-    linestyle="dashed",
+    color="orange",
+    linestyle="solid"
 )
 plt.legend()
 plt.show()
@@ -177,7 +186,7 @@ plt.figure(figsize=figsize)
 plt.plot(
     y_solar_test.to_list()[:range_n],
     label="True solar production",
-    color="orange",
+    color="blue",
     linestyle="solid",
     alpha=0.5,
 )
@@ -195,7 +204,7 @@ plt.figure(figsize=figsize)
 plt.plot(
     y_solar_test.to_list(),
     label="True solar production",
-    color="orange",
+    color="blue",
     linestyle="solid",
     alpha=0.5,
 )
@@ -203,7 +212,7 @@ plt.plot(
     y_solar_pred,
     label="Predicted solar production",
     color="orange",
-    linestyle="dashed",
+    linestyle="solid",
 )
 plt.legend()
 plt.show()
@@ -237,7 +246,9 @@ y_multi_pred = grid.predict(X_test)
 # %%
 print("Regression report:")
 rmse_multi = mean_squared_error(y_test, y_multi_pred, squared=False)
-print(rmse_multi)
+r2_multi = r2_score(y_test, y_multi_pred)
+print("RMSE: ", rmse_multi)
+print("R2: ", r2_multi)
 
 # %%
 print("Best combinded params:", grid.best_params_)
@@ -261,9 +272,11 @@ y_true = y[start_n:range_n]
 dates = pd.to_datetime(dates)
 selected_dates = dates[start_n:range_n:8]
 
+
 # %%
 def format_date_time(dt):
     return dt.strftime("%Y-%m-%d\n%H:%M:%S")
+
 
 # %%
 formatted_dates = [format_date_time(dt) for dt in selected_dates]
@@ -282,14 +295,14 @@ ax[0].plot(
     dates[start_n:range_n],
     y_pred[:, 0],
     label="Predicted wind production",
-    color="blue",
+    color="orange",
     linestyle="dashed",
 )
 ax[1].plot(
     dates[start_n:range_n],
     y_true["production_solar"].to_list(),
     label="True solar production",
-    color="orange",
+    color="blue",
     linestyle="solid",
     alpha=0.5,
 )
@@ -342,14 +355,14 @@ ax[0].plot(
     dates,
     y_pred[:, 0],
     label="Predicted wind production",
-    color="blue",
-    linestyle="dashed",
+    color="orange",
+    linestyle="solid",
 )
 ax[1].plot(
     dates,
     y_true["production_solar"].to_list(),
     label="True solar production",
-    color="orange",
+    color="blue",
     linestyle="solid",
     alpha=0.5,
 )
@@ -358,7 +371,7 @@ ax[1].plot(
     y_pred[:, 1],
     label="Predicted solar production",
     color="orange",
-    linestyle="dashed",
+    linestyle="solid",
 )
 ax[0].legend()
 ax[1].legend()
