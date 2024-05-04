@@ -30,6 +30,7 @@ from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error, r2_score
+import os
 
 random_state = 228
 
@@ -40,6 +41,15 @@ else:
     prepend_path = "."
 data_path = f"{prepend_path}/data/france_weather_energy.csv"
 data_path_dates = f"{prepend_path}/data/france_weather_energy_with_date.csv"
+output_path = f"{prepend_path}/output"
+svm_output_path = f"{output_path}/svm"
+
+# %%
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+if not os.path.exists(svm_output_path):
+    os.makedirs(svm_output_path)
+
 
 # %%
 df = pd.read_csv(data_path)
@@ -201,6 +211,7 @@ plt.plot(
     linestyle="dashed",
 )
 plt.legend()
+plt.savefig(f"{svm_output_path}/wind_model_prediction.png")
 plt.show()
 
 # %%
@@ -219,6 +230,7 @@ plt.plot(
     linestyle="solid"
 )
 plt.legend()
+plt.savefig(f"{svm_output_path}/wind_model_prediction_all.png")
 plt.show()
 
 # %%
@@ -237,6 +249,7 @@ plt.plot(
     linestyle="dashed",
 )
 plt.legend()
+plt.savefig(f"{svm_output_path}/solar_model_prediction.png")
 plt.show()
 
 # %%
@@ -255,6 +268,7 @@ plt.plot(
     linestyle="solid",
 )
 plt.legend()
+plt.savefig(f"{svm_output_path}/solar_model_prediction_all.png")
 plt.show()
 
 # %%
@@ -386,6 +400,7 @@ ax[0].set_ylabel("Wind production (MW)")
 ax[1].set_ylabel("Solar production (MW)")
 plt.xlabel("Instance in time")
 plt.xticks(selected_dates, formatted_dates)
+plt.savefig(f"{svm_output_path}/combined_model_prediction.png")
 plt.show()
 
 # %%
@@ -400,6 +415,10 @@ print()
 print("Predicted wind production rmse:", rmse_wind)
 print("Predicted solar production rmse:", rmse_solar)
 print("Multi-output regression rmse:", rmse_multi)
+print()
+print("Predicted wind production r2:", r2_wind)
+print("Predicted solar production r2:", r2_solar)
+print("Multi-output regression r2:", r2_multi)
 
 # %%
 y_pred = grid.predict(X)
@@ -446,4 +465,5 @@ ax[0].set_ylabel("Wind production (MW)")
 ax[1].set_ylabel("Solar production (MW)")
 plt.xlabel("Instance in time")
 plt.xticks(selected_dates, formatted_dates)
+plt.savefig(f"{svm_output_path}/combined_model_prediction_all.png")
 plt.show()
