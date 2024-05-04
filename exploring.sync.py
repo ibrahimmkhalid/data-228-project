@@ -14,22 +14,30 @@
 
 # %%
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import datetime
-import random
 import matplotlib.animation as animation
 import pandas as pd
 import datetime
 import seaborn as sns
+import os
 
 # %%
 energy_path = "./data/france_production.csv"
 weather_path = "./data/france_weather.csv"
+output_path = "./output"
 
 # %%
-weather_df = pd.read_csv(weather_path)
-energy_df = pd.read_csv(energy_path)
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+
+# %%
+try:
+    weather_df = pd.read_csv(weather_path)
+    energy_df = pd.read_csv(energy_path)
+except FileNotFoundError:
+    print("./data/france_production.csv or ./data/france_weather.csv not found")
+    exit(1)
 
 # %%
 energy_df.columns
@@ -202,23 +210,26 @@ print(df["dt_iso"].min())
 print(df["dt_iso"].max())
 
 # %%
+plt.rcParams.update({'font.size': 14})  # Set font size to 14
 number_of_days = 7
 start_date = "2022-01-13"
 end_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") + datetime.timedelta(days=number_of_days)
 end_date = end_date.strftime("%Y-%m-%d")
 df_plot = df[df["dt_iso"] >= start_date]
 df_plot = df_plot[df_plot["dt_iso"] <= end_date]
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(12, 5))
 plt.plot(df_plot["dt_iso"], df_plot["production_wind"], label="Wind")
 plt.plot(df_plot["dt_iso"], df_plot["production_solar"], label="Solar")
 plt.xlabel("Date")
 plt.ylabel("Production (MW)")
 plt.legend()
-plt.savefig("energy_production_2.png")
+plt.savefig(f"{output_path}/energy_production_sample_week.png")
 plt.show()
+plt.rcParams.update({'font.size': plt.rcParamsDefault['font.size']})
 
 # %%
-fig, ax = plt.subplots(figsize=(10, 6))
+plt.rcParams.update({'font.size': 14})  # Set font size to 14
+fig, ax = plt.subplots(figsize=(12, 5))
 line1, = ax.plot([], [], label="Wind")
 line2, = ax.plot([], [], label="Solar")
 ax.legend()
@@ -239,11 +250,13 @@ ani = animation.FuncAnimation(fig,
                               frames=int((df["dt_iso"].max() - df["dt_iso"].min()).days - number_of_days + 1),
                               interval=75,
                               blit=True)
-ani.save("energy_production.mp4")
+ani.save(f"{output_path}/energy_production.mp4")
+plt.rcParams.update({'font.size': plt.rcParamsDefault['font.size']})
 
 # %%
 plt.figure(figsize=(12, 8))
 sns.heatmap(df.corr(), annot=True)
+plt.savefig(f"{output_path}/corr_all.png")
 plt.show()
 
 # %% [markdown]
@@ -256,11 +269,36 @@ plt.show()
 # %%
 df.drop(columns=["feels_like","temp_min", "temp_max", "rain_1h", "snow_1h"], inplace=True)
 df.to_csv("./data/france_weather_energy_with_date.csv", index=False)
+
+# %%
+df.describe(include="all")
+
+# %%
 df = df.drop(columns=["dt_iso"]).reset_index(drop=True)
 
 # %%
 plt.figure(figsize=(8, 6))
-sns.heatmap(df.corr(), annot=True)
+corr = df.corr()
+sns.heatmap(corr, annot=True)
+plt.savefig(f"{output_path}/corr_select.png")
+plt.show()
+
+# %%
+plt.bar(corr["production_solar"].index[:-2], corr["production_solar"].values[:-2])
+plt.ylim(-0.6, 0.8)
+plt.xticks(rotation=45)
+plt.xlabel("feature")
+plt.ylabel("correlation")
+plt.savefig(f"{output_path}/corr_solar.png")
+plt.show()
+
+# %%
+plt.bar(corr["production_wind"].index[:-2], corr["production_wind"].values[:-2])
+plt.ylim(-0.6, 0.8)
+plt.xticks(rotation=45)
+plt.xlabel("feature")
+plt.ylabel("correlation")
+plt.savefig(f"{output_path}/corr_wind.png")
 plt.show()
 
 # %%
