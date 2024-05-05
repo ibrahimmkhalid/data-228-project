@@ -3,7 +3,7 @@
 .ipynb_checkpoints/
 .todo
 data/
-./data/france_weather.csv
-./data/france_production.csv
+!data/france_weather.csv
+!data/france_production.csv
 papers/
 output/
