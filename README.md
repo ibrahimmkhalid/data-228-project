@@ -12,4 +12,6 @@ Solar and Wind Energy production using weather data
 
 ### Project files
 - `exploring.ipynb` - File for EDA, converts raw data to usable dataset for machine learning
-- `model_svm.ipynb` - Performs training and testing of the problem statement using the SVR regressor
+- `model_{type}.ipynb` - Performs training and testing of the problem statement using the specified model
+- `./data` - contains original dataset
+- `project.zip` - Full project, including presentation and report
