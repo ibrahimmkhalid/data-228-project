@@ -4,10 +4,10 @@ Solar and Wind Energy production using weather data
 ---
 
 ### Team members
-- Shrey Agarwal
+- Shrey Agarwal [@shr4git](https://github.com/shr4git)
 - Ibrahim Khalid [@ibrahimmkhalid](https://github.com/ibrahimmkhalid)
-- Anusmriti Sikdar
-- Justin Wang
+- Anusmriti Sikdar [@anusmriti26](https://github.com/anusmriti26)
+- Justin Wang [@judowang](https://github.com/judowang)
 
 
 ### Project files
